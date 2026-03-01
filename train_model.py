@@ -3,10 +3,11 @@ import numpy as np
 import joblib
 import os
 
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import RobustScaler, PolynomialFeatures
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
+from xgboost import XGBClassifier
 from sklearn.cluster import KMeans
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
@@ -88,16 +89,32 @@ vc_sm = pd.Series(y_train_sm).value_counts()
 print(f"After SMOTE → Pass: {vc_sm.get(1,0):,}  Fail: {vc_sm.get(0,0):,}")
 
 # ─────────────────────────────────────────────
-# 6. TRAIN MODELS — pick best by F1
+# 6. TRAIN MODELS AND COMPARE USING GridSearchCV
 # ─────────────────────────────────────────────
+cv_strategy = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
+
 candidates = {
-    "RandomForest": RandomForestClassifier(
-        n_estimators=150, max_depth=12,
-        class_weight="balanced", random_state=42, n_jobs=-1,
-    ),
-    "LogisticRegression": LogisticRegression(
-        max_iter=1000, class_weight="balanced", random_state=42,
-    ),
+    "LogisticRegression": {
+        "model": LogisticRegression(class_weight="balanced", random_state=42, max_iter=2000),
+        "params": {
+            "C": [0.1, 1.0, 10.0]
+        }
+    },
+    "RandomForest": {
+        "model": RandomForestClassifier(class_weight="balanced", random_state=42, n_jobs=-1),
+        "params": {
+            "n_estimators": [50, 100],
+            "max_depth": [6, 12]
+        }
+    },
+    "XGBoost": {
+        "model": XGBClassifier(use_label_encoder=False, eval_metric="logloss", random_state=42, n_jobs=-1),
+        "params": {
+            "n_estimators": [50, 100],
+            "max_depth": [3, 6],
+            "learning_rate": [0.05, 0.1]
+        }
+    }
 }
 
 print("\n{:<20} {:>10} {:>12} {:>10} {:>12}".format(
@@ -105,10 +122,25 @@ print("\n{:<20} {:>10} {:>12} {:>10} {:>12}".format(
 print("-" * 66)
 
 best_name, best_model, best_f1 = None, None, -1
+best_params = {}
 
-for name, m in candidates.items():
-    m.fit(X_train_sm, y_train_sm)
-    y_pred = m.predict(X_test)
+for name, config in candidates.items():
+    print(f"\nRunning GridSearchCV for {name}...")
+    grid_search = GridSearchCV(
+        estimator=config["model"],
+        param_grid=config["params"],
+        scoring="f1_weighted",
+        cv=cv_strategy,
+        n_jobs=-1,
+        verbose=1
+    )
+    
+    # Train grid search
+    grid_search.fit(X_train_sm, y_train_sm)
+    best_estimator = grid_search.best_estimator_
+    print(f"Best params for {name}: {grid_search.best_params_}")
+    
+    y_pred = best_estimator.predict(X_test)
 
     acc  = accuracy_score(y_test, y_pred)
     prec = precision_score(y_test, y_pred, average="weighted")
@@ -119,9 +151,10 @@ for name, m in candidates.items():
         name, acc, prec, rec, f1))
 
     if f1 > best_f1:
-        best_f1, best_name, best_model = f1, name, m
+        best_f1, best_name, best_model, best_params = f1, name, best_estimator, grid_search.best_params_
 
-print(f"\nBest model: {best_name}  (F1 = {best_f1:.4f})")
+print(f"\n🏆 Best overall model: {best_name}  (F1 = {best_f1:.4f})")
+print(f"Winning hyperparameters: {best_params}")
 
 # ─────────────────────────────────────────────
 # 7. FINAL EVALUATION ON TEST SET
