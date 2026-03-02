@@ -6,17 +6,17 @@
 
 * **Divyanshu Raj** – Data Engineering & Preprocessing Lead
 * **Yash Agarwal** – ML Modeling & Algorithm Tuning Lead
-* **Abhijeet** – Application Development & Deployment Lead
-* **[Ranajeet Roy]** – Clustering Architecture & Documentation Lead
+* **Abhijeet Kumar** – Application Development & Deployment Lead
+* **Ranajeet Roy** – Clustering Architecture & Documentation Lead
 
 **Project Details:**
 
 * **Course:** Intro to GenAI Capstone Project (Milestone 1)
-* **Batch:** 
+* **Batch:**
 * **Date:** March 2026
-* **GitHub Repository:** 
-* **Hosted Application:** 
-* **Video Presentation:** 
+* **GitHub Repository:**
+* **Hosted Application:**
+* **Video Presentation:**
 
 ---
 
@@ -36,17 +36,18 @@ Additionally, predicting academic failure (a minority class) is inherently diffi
 
 The system defines a student as **passing** only when all three behavioral thresholds are simultaneously met:
 
-| Behavioral Feature            | Passing Threshold |
-| :---------------------------- | :---------------- |
-| Weekly Self-Study Hours       | ≥ 10 hours/week   |
-| Attendance Percentage         | ≥ 75%             |
-| Class Participation Score     | ≥ 5 / 10          |
+| Behavioral Feature        | Passing Threshold |
+| :------------------------ | :---------------- |
+| Weekly Self-Study Hours   | ≥ 10 hours/week  |
+| Attendance Percentage     | ≥ 75%            |
+| Class Participation Score | ≥ 5 / 10         |
 
 Any student failing to meet even one of these criteria is classified as **at risk of failing**, mirroring the conditions displayed on the live dashboard.
 
 ### Solution Overview
 
 We engineered a machine learning pipeline that:
+
 1. Cleans and balances the dataset using IQR outlier removal and SMOTE oversampling
 2. Trains an **XGBoost Classifier** for binary pass/fail prediction
 3. Trains a supplementary **XGBoost Classifier** for grade-letter prediction (A–E)
@@ -63,14 +64,14 @@ The dataset `student_performance.csv` contains **1,000,000 synthetic student rec
 
 ### Dataset Structure
 
-| Column                    | Type    | Description                                      |
-| :------------------------ | :------ | :----------------------------------------------- |
-| `student_id`              | Integer | Unique identifier per student (1 to 1,000,000)   |
-| `weekly_self_study_hours` | Float   | Hours spent studying independently per week      |
-| `attendance_percentage`   | Float   | Percentage of classes attended                   |
-| `class_participation`     | Float   | Participation score (0–10 scale)                 |
-| `total_score`             | Float   | Overall academic score (excluded from features)  |
-| `grade`                   | String  | Letter grade: A, B, C, D, F                      |
+| Column                      | Type    | Description                                     |
+| :-------------------------- | :------ | :---------------------------------------------- |
+| `student_id`              | Integer | Unique identifier per student (1 to 1,000,000)  |
+| `weekly_self_study_hours` | Float   | Hours spent studying independently per week     |
+| `attendance_percentage`   | Float   | Percentage of classes attended                  |
+| `class_participation`     | Float   | Participation score (0–10 scale)               |
+| `total_score`             | Float   | Overall academic score (excluded from features) |
+| `grade`                   | String  | Letter grade: A, B, C, D, F                     |
 
 ### Feature Engineering Decisions
 
@@ -78,22 +79,22 @@ To **prevent data leakage**, the columns `total_score` and `grade` were delibera
 
 ### Statistical Summary (Raw Dataset)
 
-| Feature                   | Mean    | Std Dev | Min   | 25%   | 50%   | 75%   | Max    |
-| :------------------------ | :------ | :------ | :---- | :---- | :---- | :---- | :----- |
-| `weekly_self_study_hours` | ~17.0   | ~6.5    | 0.0   | ~12   | ~17   | ~22   | ~40    |
-| `attendance_percentage`   | ~80.0   | ~12.0   | 0.0   | ~72   | ~82   | ~91   | 100.0  |
-| `class_participation`     | ~5.0    | ~2.9    | 0.0   | ~2.5  | ~5.0  | ~7.5  | 10.0   |
-| `total_score`             | 84.28   | 15.43   | 9.4   | 73.9  | 87.5  | 100.0 | 100.0  |
+| Feature                     | Mean  | Std Dev | Min | 25%  | 50%  | 75%   | Max   |
+| :-------------------------- | :---- | :------ | :-- | :--- | :--- | :---- | :---- |
+| `weekly_self_study_hours` | ~17.0 | ~6.5    | 0.0 | ~12  | ~17  | ~22   | ~40   |
+| `attendance_percentage`   | ~80.0 | ~12.0   | 0.0 | ~72  | ~82  | ~91   | 100.0 |
+| `class_participation`     | ~5.0  | ~2.9    | 0.0 | ~2.5 | ~5.0 | ~7.5  | 10.0  |
+| `total_score`             | 84.28 | 15.43   | 9.4 | 73.9 | 87.5 | 100.0 | 100.0 |
 
 ### Grade Distribution (Raw)
 
-| Grade | Count   | %      |
-| :---- | :------ | :----- |
-| A     | 548,644 | 54.9%  |
-| B     | 258,174 | 25.8%  |
-| C     | 141,980 | 14.2%  |
-| D     | 44,998  | 4.5%   |
-| F     | 6,204   | 0.6%   |
+| Grade | Count   | %     |
+| :---- | :------ | :---- |
+| A     | 548,644 | 54.9% |
+| B     | 258,174 | 25.8% |
+| C     | 141,980 | 14.2% |
+| D     | 44,998  | 4.5%  |
+| F     | 6,204   | 0.6%  |
 
 No null values were found in any column.
 
@@ -116,11 +117,11 @@ Upper Bound = Q3 + 1.5 × IQR
 
 **Impact:**
 
-| Stage                  | Row Count |
-| :--------------------- | :-------- |
-| Raw dataset            | 1,000,000 |
-| After outlier removal  | ~986,175  |
-| Removed (noise)        | ~13,825   |
+| Stage                 | Row Count |
+| :-------------------- | :-------- |
+| Raw dataset           | 1,000,000 |
+| After outlier removal | ~986,175  |
+| Removed (noise)       | ~13,825   |
 
 Roughly **1.4% of records** were cleaned as statistical noise, ensuring model training was not corrupted by extreme edge cases.
 
@@ -148,15 +149,15 @@ The distribution is nearly balanced (~45/55 split), which is largely because the
 
 ### 4.1 Technical Stack
 
-| Category            | Libraries/Tools                                   |
-| :------------------ | :------------------------------------------------ |
-| Data Processing     | `pandas`, `numpy`                                 |
-| Preprocessing       | `scikit-learn` (MinMaxScaler, train_test_split)   |
-| Class Balancing     | `imbalanced-learn` (SMOTE)                        |
-| ML Algorithms       | `scikit-learn` (KMeans), `xgboost` (XGBClassifier)     |
-| Label Encoding      | `scikit-learn` (LabelEncoder)                     |
-| Model Persistence   | `joblib`                                          |
-| Deployment & UI     | `streamlit`                                       |
+| Category          | Libraries/Tools                                        |
+| :---------------- | :----------------------------------------------------- |
+| Data Processing   | `pandas`, `numpy`                                  |
+| Preprocessing     | `scikit-learn` (MinMaxScaler, train_test_split)      |
+| Class Balancing   | `imbalanced-learn` (SMOTE)                           |
+| ML Algorithms     | `scikit-learn` (KMeans), `xgboost` (XGBClassifier) |
+| Label Encoding    | `scikit-learn` (LabelEncoder)                        |
+| Model Persistence | `joblib`                                             |
+| Deployment & UI   | `streamlit`                                          |
 
 ### 4.2 System Architecture Pipeline
 
@@ -221,10 +222,10 @@ A `LabelEncoder` was fitted on grade values (A–F) and saved as `grade_encoder.
 
 Models were evaluated on an **isolated 20% held-out test set** with stratified sampling to preserve class proportions.
 
-| Metric        | Value   |
-| :------------ | :------ |
-| **Accuracy**  | 1.00    |
-| **Precision** | 1.00    |
+| Metric              | Value |
+| :------------------ | :---- |
+| **Accuracy**  | 1.00  |
+| **Precision** | 1.00  |
 
 > The high accuracy reflects the deterministic nature of the pass/fail labels — since the labels are defined as exact threshold conditions on the same features the model trains on, XGBoost can learn the decision boundaries perfectly. This is by design: the goal is a system where the model's prediction precisely mirrors the threshold logic displayed to users on the dashboard.
 
@@ -234,12 +235,12 @@ In a real academic context, the cost of a **False Negative** (predicting "Pass" 
 
 ### 5.3 Data Preprocessing Results
 
-| Step                        | Result                                   |
-| :-------------------------- | :--------------------------------------- |
-| Null value imputation       | 0 nulls remaining after median fill      |
-| IQR outlier removal         | ~13,825 rows removed (1.4% of dataset)   |
-| SMOTE applied to train set  | Both classes equalized in training split |
-| Scaler fitted               | MinMaxScaler on 3 behavioral features    |
+| Step                       | Result                                   |
+| :------------------------- | :--------------------------------------- |
+| Null value imputation      | 0 nulls remaining after median fill      |
+| IQR outlier removal        | ~13,825 rows removed (1.4% of dataset)   |
+| SMOTE applied to train set | Both classes equalized in training split |
+| Scaler fitted              | MinMaxScaler on 3 behavioral features    |
 
 ---
 
@@ -270,13 +271,13 @@ This ensures the evaluation reflects real-world distribution while training bene
 
 All model artifacts are saved to the `models/` directory using `joblib`:
 
-| Artifact              | Purpose                               |
-| :-------------------- | :------------------------------------ |
-| `pass_model.pkl`      | Binary pass/fail classifier           |
-| `grade_model.pkl`     | Grade letter predictor (A–F)          |
-| `grade_encoder.pkl`   | LabelEncoder for grade decoding       |
-| `scaler.pkl`          | MinMaxScaler for feature normalization |
-| `kmeans.pkl`          | K-Means behavioral cluster model      |
+| Artifact              | Purpose                                |
+| :-------------------- | :------------------------------------- |
+| `pass_model.pkl`    | Binary pass/fail classifier            |
+| `grade_model.pkl`   | Grade letter predictor (A–F)          |
+| `grade_encoder.pkl` | LabelEncoder for grade decoding        |
+| `scaler.pkl`        | MinMaxScaler for feature normalization |
+| `kmeans.pkl`        | K-Means behavioral cluster model       |
 
 ### 6.5 Dashboard Consistency
 
@@ -321,12 +322,12 @@ The project was executed through collaborative teamwork with clearly defined ind
 
 ### Contribution Summary
 
-| Task Area                          | Primary Contributor |
-| :--------------------------------- | :------------------ |
-| Data Cleaning & Preprocessing      | Divyanshu Raj       |
-| ML Modeling & Training             | Yash Agarwal        |
-| Frontend UI & Dashboard            | Abhijeet            |
-| Clustering & Documentation         | [Insert Name 4]     |
+| Task Area                     | Primary Contributor |
+| :---------------------------- | :------------------ |
+| Data Cleaning & Preprocessing | Divyanshu Raj       |
+| ML Modeling & Training        | Yash Agarwal        |
+| Frontend UI & Dashboard       | Abhijeet Kumar      |
+| Clustering & Documentation    | Ranajeet Roy        |
 
 ---
 
