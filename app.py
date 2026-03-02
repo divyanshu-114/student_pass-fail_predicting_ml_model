@@ -1,185 +1,109 @@
+"""Streamlit dashboard for visualizing predictions."""
+
 import streamlit as st
 import pandas as pd
-import joblib
-import os
 import matplotlib.pyplot as plt
+from typing import List
+
+from src.inference import StudentPredictor
+from src.ui_components import UIBuilder
+from src.config import FEATURES
 
 st.set_page_config(page_title="Student Performance Dashboard", layout="wide")
 
-# ─────────────────────────────
-# LOAD MODELS
-# ─────────────────────────────
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODELS_DIR = os.path.join(BASE_DIR, "models")
+# Initialize models and UI tools
+ui = UIBuilder()
+ui.load_css()
+predictor = StudentPredictor()
 
-pass_model     = joblib.load(os.path.join(MODELS_DIR,"pass_model.pkl"))
-grade_model    = joblib.load(os.path.join(MODELS_DIR,"grade_model.pkl"))
-grade_encoder  = joblib.load(os.path.join(MODELS_DIR,"grade_encoder.pkl"))
-scaler         = joblib.load(os.path.join(MODELS_DIR,"scaler.pkl"))
-kmeans         = joblib.load(os.path.join(MODELS_DIR,"kmeans.pkl"))
+if not predictor.is_ready():
+    st.error("⚠️ Models not found! Please run `python train_model.py` first.")
+    st.stop()
 
-FEATURES = [
-    "weekly_self_study_hours",
-    "attendance_percentage",
-    "class_participation"
-]
-
-# ─────────────────────────────
-# IMPROVEMENT SUGGESTIONS
-# ─────────────────────────────
-def improvement_areas(row):
-    tips = []
-
-    if row["weekly_self_study_hours"] < 10:
-        tips.append("Increase study hours")
-
-    if row["attendance_percentage"] < 75:
-        tips.append("Improve attendance")
-
-    if row["class_participation"] < 5:
-        tips.append("Participate more in class")
-
-    return tips if tips else ["Keep up the good work!"]
-
-# ─────────────────────────────
-# PREDICTION FUNCTION
-# ─────────────────────────────
-def predict(df):
-
-    X = df[FEATURES]
-    X_scaled = scaler.transform(X)
-
-    prob = pass_model.predict_proba(X_scaled)[:,1]
-    pred = (prob >= 0.5).astype(int)
-
-    grade_nums = grade_model.predict(X_scaled)
-    grades = grade_encoder.inverse_transform(grade_nums)
-
-    cluster = kmeans.predict(X_scaled)
-
-    return prob, pred, grades, cluster
-
-
-# ─────────────────────────────
-# SIDEBAR
-# ─────────────────────────────
+# Dashboard Switcher
 st.sidebar.title("Dashboard")
-page = st.sidebar.radio("Select", ["Individual Prediction","Batch Prediction"])
+page = st.sidebar.radio("Select View", ["Individual Prediction", "Batch Prediction"])
 
-# ═════════════════════════════
-# 🎓 INDIVIDUAL
-# ═════════════════════════════
 if page == "Individual Prediction":
-
     st.title("🎓 Student Individual Prediction")
 
-    study = st.slider("Study Hours",0,40,10)
-    attend = st.slider("Attendance %",0,100,80)
-    part = st.slider("Participation",0,10,5)
+    col1, col2, col3 = st.columns(3)
+    study = col1.slider("Weekly Study Hours", 0, 40, 10)
+    attend = col2.slider("Attendance %", 0, 100, 80)
+    part = col3.slider("Participation", 0, 10, 5)
 
-    if st.button("Predict"):
-
+    if st.button("Predict Outcome", type="primary"):
         df = pd.DataFrame([{
-            "weekly_self_study_hours":study,
-            "attendance_percentage":attend,
-            "class_participation":part
+            "weekly_self_study_hours": study,
+            "attendance_percentage": attend,
+            "class_participation": part
         }])
 
-        prob, pred, grades, cluster = predict(df)
+        prob, pred, cluster = predictor.predict_bundle(df)
+        
+        # Render clean result
+        ui.render_prediction_card(prob[0], pred[0], cluster[0])
+        
+        # Area of Improvement
+        if pred[0] == 0:
+            st.subheader("Actionable Recommendations")
+            for tip in predictor.get_student_recommendations(df.iloc[0]):
+                st.write(f"• {tip}")
 
-        st.subheader("Result")
-
-        if pred[0] == 1:
-            st.success("Pass ✅")
-        else:
-            st.error("Fail ❌")
-            st.subheader("Area of Improvement")
-            for tip in improvement_areas(df.iloc[0]):
-                st.write("•", tip)
-
-        st.write("Probability:", round(prob[0]*100,2),"%")
-        st.write("Grade:", grades[0])
-        st.write("Cluster:", cluster[0])
-
-
-# ═════════════════════════════
-# 📁 BATCH
-# ═════════════════════════════
 else:
-
     st.title("📁 CSV Batch Prediction")
-
-    file = st.file_uploader("Upload CSV", type=["csv"])
+    file = st.file_uploader("Upload Student Data (CSV)", type=["csv"])
 
     if file:
-
         df = pd.read_csv(file)
-
         missing = [c for c in FEATURES if c not in df.columns]
 
         if missing:
-            st.error(f"Missing columns: {missing}")
+            st.error(f"Missing required columns: {missing}")
             st.stop()
 
-        prob, pred, grades, cluster = predict(df)
-
+        # Run batch prediction
+        prob, pred, cluster = predictor.predict_bundle(df)
+        
         df["Pass_Fail"] = pred
         df["Probability"] = prob
-        df["Grade"] = grades
         df["Cluster"] = cluster
 
-        # Improvement for failed students
+        # Improvement tips
         df["Improvement"] = df.apply(
-            lambda row: ", ".join(improvement_areas(row)) if row["Pass_Fail"]==0 else "—",
+            lambda row: ", ".join(predictor.get_student_recommendations(row)) if row["Pass_Fail"] == 0 else "—",
             axis=1
         )
 
         st.dataframe(df)
 
-        # 🔎 SEARCH STUDENT
         st.subheader("🔎 Search by Student ID")
-
         if "student_id" in df.columns:
-
-            sid = st.text_input("Enter Student ID")
-
+            sid = st.text_input("Enter Student ID:")
             if st.button("Search"):
-
-                result = df[df["student_id"].astype(str)==sid]
-
+                result = df[df["student_id"].astype(str) == str(sid)]
                 if not result.empty:
                     st.dataframe(result)
                 else:
-                    st.warning("Student not found")
+                    st.warning("Student ID not found in the uploaded file.")
 
-        # 📊 CHARTS
-        st.subheader("📊 Charts")
-
+        st.subheader("📊 Visualizations")
         col1, col2 = st.columns(2)
 
-        # Grade chart
         with col1:
-            fig, ax = plt.subplots()
-            df["Grade"].value_counts().plot(kind="bar", ax=ax)
-            ax.set_title("Grade Distribution")
+            fig, ax = plt.subplots(figsize=(6, 4))
+            pf_counts = df["Pass_Fail"].map({1: "Pass", 0: "Fail"}).value_counts()
+            ui.mpl_pie(ax, pf_counts.index.tolist(), pf_counts.values.tolist(), "Pass vs Fail Ratio")
             st.pyplot(fig)
 
-        # Pass Fail chart
         with col2:
-            fig, ax = plt.subplots()
-            df["Pass_Fail"].value_counts().plot(kind="pie", autopct="%1.1f%%", ax=ax)
-            ax.set_title("Pass vs Fail")
+            fig, ax = plt.subplots(figsize=(6, 4))
+            c_counts = df["Cluster"].value_counts().sort_index()
+            ui.mpl_bar(ax, [f"C{x}" for x in c_counts.index], c_counts.values.tolist(), "Cluster Distribution", ["#a78bfa"]*len(c_counts))
             st.pyplot(fig)
 
-        # Cluster chart
-        fig, ax = plt.subplots()
-        df["Cluster"].value_counts().plot(kind="bar", ax=ax)
-        ax.set_title("Cluster Distribution")
-        st.pyplot(fig)
-
-        # DOWNLOAD
         st.download_button(
-            "Download Results",
+            "Download Batch Results",
             df.to_csv(index=False),
-            "results.csv"
+            "predicted_results.csv"
         )
