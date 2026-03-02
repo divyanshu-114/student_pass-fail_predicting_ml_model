@@ -1,4 +1,4 @@
 sample_for_projects/
 .DS_Store
 models/
-__pycache__/
+**/__pycache__/
