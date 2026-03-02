@@ -1,13 +1,13 @@
 # 📊 Intelligent Learning Analytics Dashboard
 
-A machine learning-powered Streamlit web application that analyzes student performance data, predicts pass/fail outcomes using Logistic Regression, and clusters students into performance groups using K-Means clustering.
+A machine learning-powered Streamlit web application that analyzes student performance data, predicts pass/fail outcomes using XGBoost, and clusters students into performance groups using K-Means clustering.
 
 ---
 
 ## 🚀 Features
 
 - **Batch Dataset Analysis** — Upload a CSV of student records to:
-  - Predict pass/fail for each student using Logistic Regression
+  - Predict pass/fail for each student using XGBoost
   - Cluster students into 3 performance groups using K-Means
   - Visualize score distributions, study hours vs. score, and attendance vs. score
   - Generate personalized improvement recommendations for at-risk students
@@ -35,7 +35,7 @@ learning-analytics-ml/
 
 | Model | Purpose |
 |---|---|
-| **Logistic Regression** | Binary classification — predicts pass (1) or fail (0) |
+| **XGBoost** | Binary classification — predicts pass (1) or fail (0) |
 | **K-Means Clustering** | Unsupervised grouping of students into 3 performance clusters |
 | **Standard Scaler** | Feature normalization before model training |
 
@@ -67,7 +67,7 @@ learning-analytics-ml/
 1. Upload a student CSV file
 2. The app binarizes grades into pass/fail labels
 3. Features (`weekly_self_study_hours`, `attendance_percentage`, `class_participation`) are scaled with `StandardScaler`
-4. A **Logistic Regression** model is trained on an 80/20 train-test split
+4. An **XGBoost** model is trained on an 80/20 train-test split
 5. **K-Means** groups students into 3 clusters
 6. Results are visualized with scatter plots and histograms
 7. Students predicted to fail receive personalized recommendations
@@ -83,7 +83,7 @@ learning-analytics-ml/
 
 - Loads `data/student_performance.csv`
 - Removes outliers via the **IQR method**
-- Trains Logistic Regression and evaluates with **accuracy** and **precision** metrics
+- Trains XGBoost and evaluates with **accuracy** and **precision** metrics
 - Runs K-Means clustering and prints cluster distribution
 
 ---
@@ -95,7 +95,8 @@ learning-analytics-ml/
 | **Python 3** | Core language |
 | **Streamlit** | Interactive web dashboard |
 | **Pandas** | Data loading & manipulation |
-| **scikit-learn** | ML models (Logistic Regression, K-Means, StandardScaler) |
+| **scikit-learn** | ML models (K-Means, StandardScaler) |
+| **xgboost** | ML model (XGBClassifier) |
 | **Matplotlib** | Plot rendering |
 | **Seaborn** | Statistical visualizations |
 | **NumPy** | Numerical computing |
@@ -173,7 +174,7 @@ This will output:
 
 - Save trained model to disk (e.g., with `joblib`) for reuse across sessions
 - Add more features: assignment scores, quiz performance, engagement time
-- Implement additional ML models (Random Forest, XGBoost) for comparison
+- Implement additional ML models (e.g. LightGBM) for comparison
 - Add downloadable prediction reports (CSV/PDF)
 - Deploy to Streamlit Cloud or HuggingFace Spaces
 

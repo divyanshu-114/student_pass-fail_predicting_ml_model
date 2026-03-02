@@ -27,8 +27,8 @@
 │               📊 STEP 2: OUTLIER REMOVAL (IQR)              │
 │                                                             │
 │  For each numeric column:                                   │
-│    Lower Bound = Q1 − (1.5 × IQR)                          │
-│    Upper Bound = Q3 + (1.5 × IQR)                          │
+│    Lower Bound = Q1 − (1.5 × IQR)                           │
+│    Upper Bound = Q3 + (1.5 × IQR)                           │
 │  → Rows outside bounds are dropped                          │
 │                                                             │
 │  Before: 1,000,000 rows                                     │
@@ -53,7 +53,7 @@
 │            🔤 STEP 4: GRADE LABEL ENCODING                  │
 │                                                             │
 │  LabelEncoder().fit_transform(df["grade"])                  │
-│    A → 0,  B → 1,  C → 2,  D → 3,  F → 4                  │
+│    A → 0,  B → 1,  C → 2,  D → 3,  F → 4                    │
 │  → Saved as: grade_encoder.pkl                              │
 └──────────────────────────────┬──────────────────────────────┘
                                │
@@ -75,7 +75,7 @@
 │                ⚖️  STEP 6: FEATURE SCALING                  │
 │                                                             │
 │  MinMaxScaler().fit_transform(X)                            │
-│  → All values normalized to range [0.0 → 1.0]              │
+│  → All values normalized to range [0.0 → 1.0]               │
 │  → Saved as: scaler.pkl                                     │
 │                                                             │
 │  Ensures no single feature dominates due to scale           │
@@ -111,11 +111,11 @@
         │  Pass/Fail         │   │  Grade Predictor          │
         │  Classifier        │   │  (A, B, C, D, F)          │
         │                    │   │                           │
-        │  RandomForest      │   │  RandomForest             │
+        │  XGBoost           │   │  XGBoost                  │
         │  Classifier        │   │  Classifier               │
         │  (SMOTE train set) │   │  (full scaled data)       │
-        │                    │   │                           │
-        │ → pass_model.pkl   │   │ → grade_model.pkl         │
+        │                    │   │                          │
+        │ → pass_model.pkl   │   │ → grade_model.pkl        │
         └────────────────────┘   └──────────────────────────┘
                          │           │
                          └─────┬─────┘
@@ -135,19 +135,19 @@
                                │
                                ▼
 ┌─────────────────────────────────────────────────────────────┐
-│               💾 STEP 10: MODEL SERIALIZATION               │
+│               💾 STEP 10: MODEL SERIALIZATION                │
 │                                                             │
 │  All artifacts saved to /models/ directory:                 │
 │                                                             │
-│  ┌─────────────────────┬──────────────────────────────┐    │
-│  │ File                │ Purpose                      │    │
-│  ├─────────────────────┼──────────────────────────────┤    │
-│  │ pass_model.pkl      │ Binary classifier (0/1)      │    │
-│  │ grade_model.pkl     │ Grade predictor (A–F)        │    │
-│  │ grade_encoder.pkl   │ Decode numeric → letter      │    │
-│  │ scaler.pkl          │ Feature normalizer           │    │
-│  │ kmeans.pkl          │ Behavioral cluster model     │    │
-│  └─────────────────────┴──────────────────────────────┘    │
+│  ┌─────────────────────┬──────────────────────────────┐     │
+│  │ File                │ Purpose                      │     │
+│  ├─────────────────────┼──────────────────────────────┤     │
+│  │ pass_model.pkl      │ Binary classifier (0/1)      │     │
+│  │ grade_model.pkl     │ Grade predictor (A–F)        │     │
+│  │ grade_encoder.pkl   │ Decode numeric → letter      │     │
+│  │ scaler.pkl          │ Feature normalizer           │     │
+│  │ kmeans.pkl          │ Behavioral cluster model     │     │
+│  └─────────────────────┴──────────────────────────────┘     │
 └──────────────────────────────┬──────────────────────────────┘
                                │
                                ▼

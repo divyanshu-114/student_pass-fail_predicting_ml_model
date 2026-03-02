@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as np
 from typing import Dict, Any, List, Optional
 from sklearn.model_selection import StratifiedKFold, GridSearchCV
-from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 from sklearn.cluster import KMeans
@@ -18,18 +17,7 @@ from sklearn.metrics import (
 from src.config import MODELS_DIR
 
 class ModelTrainer:
-    """Trains and evaluates machine learning models.
-    
-    Attributes:
-        models_dir (str): Directory where models and artifacts will be saved.
-        best_model (Any): The best estimator identified post-training.
-        best_name (str): The name of the best performing model.
-        kmeans (Optional[KMeans]): The fitted KMeans clustering model.
-        metrics (Dict[str, float]): Dictionary containing performance metrics of the best model.
-    """
-    
     def __init__(self, models_dir: str = str(MODELS_DIR)) -> None:
-        """Initializes ModelTrainer with the output directory."""
         self.models_dir = models_dir
         self.best_model: Any = None
         self.best_name: str = ""
@@ -38,26 +26,12 @@ class ModelTrainer:
         
     def train_and_evaluate(self, X_train_sm: np.ndarray, y_train_sm: pd.Series, 
                            X_test: np.ndarray, y_test: pd.Series) -> None:
-        """Trains multiple candidate models using GridSearchCV and evaluates them.
-        
-        Identifies and saves the best model based on weighted F1 score.
-        
-        Args:
-            X_train_sm (np.ndarray): Balanced training feature array.
-            y_train_sm (pd.Series): Balanced training target series.
-            X_test (np.ndarray): Testing feature array.
-            y_test (pd.Series): Testing target series.
-        """
         cv_strategy = StratifiedKFold(n_splits=3, shuffle=True, random_state=42)
         
         candidates = {
             "LogisticRegression": {
                 "model": LogisticRegression(class_weight="balanced", random_state=42, max_iter=2000),
                 "params": {"C": [0.1, 1.0, 10.0]}
-            },
-            "RandomForest": {
-                "model": RandomForestClassifier(class_weight="balanced", random_state=42, n_jobs=-1),
-                "params": {"n_estimators": [50, 100], "max_depth": [6, 12]}
             },
             "XGBoost": {
                 "model": XGBClassifier(use_label_encoder=False, eval_metric="logloss", random_state=42, n_jobs=-1),
@@ -100,7 +74,7 @@ class ModelTrainer:
         print(f"\n🏆 Best overall model: {self.best_name}  (F1 = {best_f1:.4f})")
         print(f"Winning hyperparameters: {best_params}")
 
-        # Final evaluation on test set
+
         y_pred_final = self.best_model.predict(X_test)
         self.metrics = {
             "accuracy": float(accuracy_score(y_test, y_pred_final)),
@@ -126,25 +100,10 @@ class ModelTrainer:
         print(f"  TP (correct pass) : {cm[1,1]:>8,}")
 
     def train_kmeans(self, df: pd.DataFrame, feature_cols: List[str], scaler: Any) -> None:
-        """Trains a KMeans clustering model for student segmentation.
-        
-        Args:
-            df (pd.DataFrame): Training dataframe.
-            feature_cols (List[str]): Features to utilize for clustering.
-            scaler (Any): Pre-fitted scaler instance.
-        """
         self.kmeans = KMeans(n_clusters=3, random_state=42, n_init="auto")
         self.kmeans.fit(scaler.transform(df[feature_cols]))
 
     def save_artifacts(self, scaler: Any, poly: Any, feature_names: np.ndarray, feature_cols: List[str]) -> None:
-        """Saves the best model, transformers, and metrics to disk.
-        
-        Args:
-            scaler (Any): Pre-fitted model scaler.
-            poly (Any): Pre-fitted polynomial features transformer.
-            feature_names (np.ndarray): Extracted feature names.
-            feature_cols (List[str]): Original feature column names.
-        """
         os.makedirs(self.models_dir, exist_ok=True)
         joblib.dump(self.best_model, os.path.join(self.models_dir, "model.pkl"))
         joblib.dump(scaler, os.path.join(self.models_dir, "scaler.pkl"))

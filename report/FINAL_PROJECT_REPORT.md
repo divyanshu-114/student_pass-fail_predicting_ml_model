@@ -48,8 +48,8 @@ Any student failing to meet even one of these criteria is classified as **at ris
 
 We engineered a machine learning pipeline that:
 1. Cleans and balances the dataset using IQR outlier removal and SMOTE oversampling
-2. Trains a **Random Forest Classifier** for binary pass/fail prediction
-3. Trains a supplementary **Random Forest** for grade-letter prediction (A–E)
+2. Trains an **XGBoost Classifier** for binary pass/fail prediction
+3. Trains a supplementary **XGBoost Classifier** for grade-letter prediction (A–E)
 4. Applies **K-Means Clustering** to segment students into 3 behavioral cohorts
 5. Deploys the entire framework through a real-time **Streamlit** web dashboard
 
@@ -153,7 +153,7 @@ The distribution is nearly balanced (~45/55 split), which is largely because the
 | Data Processing     | `pandas`, `numpy`                                 |
 | Preprocessing       | `scikit-learn` (MinMaxScaler, train_test_split)   |
 | Class Balancing     | `imbalanced-learn` (SMOTE)                        |
-| ML Algorithms       | `scikit-learn` (RandomForestClassifier, KMeans)   |
+| ML Algorithms       | `scikit-learn` (KMeans), `xgboost` (XGBClassifier)     |
 | Label Encoding      | `scikit-learn` (LabelEncoder)                     |
 | Model Persistence   | `joblib`                                          |
 | Deployment & UI     | `streamlit`                                       |
@@ -168,8 +168,8 @@ graph TD
     D --> E[MinMaxScaler - normalize 0 to 1]
     E --> F[Train/Test Split - 80/20 stratified]
     F --> G[SMOTE Oversampling on Train Set]
-    G --> H[RandomForest - Pass/Fail Classifier]
-    G --> I[RandomForest - Grade Predictor A to E]
+    G --> H[XGBoost - Pass/Fail Classifier]
+    G --> I[XGBoost - Grade Predictor A to E]
     E --> J[KMeans - k=3 Behavioral Clustering]
     H --> K[pass_model.pkl]
     I --> L[grade_model.pkl]
@@ -186,20 +186,20 @@ graph TD
 X_scaled = (X - X_min) / (X_max - X_min)
 ```
 
-This ensures that `attendance_percentage` (range 0–100) does not numerically dominate `class_participation` (range 0–10) during tree-splitting in the Random Forest.
+This ensures that `attendance_percentage` (range 0–100) does not numerically dominate `class_participation` (range 0–10) during tree-splitting in the XGBoost model.
 
 ### 4.4 Classification Strategy
 
 **Pass/Fail Model:**
 
-* **Algorithm:** `RandomForestClassifier(random_state=42)`
+* **Algorithm:** `XGBClassifier(random_state=42)`
 * **Training data:** SMOTE-balanced training split (80% of cleaned data)
 * **Target:** Binary label based on all three behavioral thresholds
 * **Inference:** Probability (`predict_proba`) with 0.5 decision threshold
 
 **Grade Prediction Model:**
 
-* **Algorithm:** `RandomForestClassifier(random_state=42)`
+* **Algorithm:** `XGBClassifier(random_state=42)`
 * **Training data:** Full scaled dataset
 * **Target:** Label-encoded grade (A=0, B=1, C=2, D=3, F=4)
 
@@ -226,7 +226,7 @@ Models were evaluated on an **isolated 20% held-out test set** with stratified s
 | **Accuracy**  | 1.00    |
 | **Precision** | 1.00    |
 
-> The high accuracy reflects the deterministic nature of the pass/fail labels — since the labels are defined as exact threshold conditions on the same features the model trains on, the Random Forest can learn the decision boundaries perfectly. This is by design: the goal is a system where the model's prediction precisely mirrors the threshold logic displayed to users on the dashboard.
+> The high accuracy reflects the deterministic nature of the pass/fail labels — since the labels are defined as exact threshold conditions on the same features the model trains on, XGBoost can learn the decision boundaries perfectly. This is by design: the goal is a system where the model's prediction precisely mirrors the threshold logic displayed to users on the dashboard.
 
 ### 5.2 Why F1-Score / Recall Matter Here
 
@@ -298,7 +298,7 @@ The project was executed through collaborative teamwork with clearly defined ind
 
 ### Yash Agarwal – ML Modeling & Algorithm Tuning Lead
 
-* Led the design and training of the `RandomForestClassifier` for both pass/fail and grade prediction.
+* Led the design and training of the `XGBClassifier` for both pass/fail and grade prediction.
 * Integrated SMOTE oversampling into the training pipeline using `imbalanced-learn`.
 * Managed model hyperparameter settings and `random_state` reproducibility.
 * Evaluated model performance using accuracy and precision metrics on the held-out test set.
