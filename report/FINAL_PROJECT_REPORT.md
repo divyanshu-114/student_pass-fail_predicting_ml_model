@@ -12,11 +12,10 @@
 **Project Details:**
 
 * **Course:** Intro to GenAI Capstone Project (Milestone 1)
-* **Batch:**
+* **Batch:** 2024
 * **Date:** March 2026
-* **GitHub Repository:**
-* **Hosted Application:**
-* **Video Presentation:**
+* **GitHub Repository:** https://github.com/divyanshu-114/student_pass-fail_predicting_ml_model
+* **Hosted Application:** https://student-pass-fail-predicting-ml-model.onrender.com/#student-individual-prediction
 
 ---
 
