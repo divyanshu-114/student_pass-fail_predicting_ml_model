@@ -28,7 +28,7 @@ if page == "Individual Prediction":
     st.title("🎓 Student Individual Prediction")
 
     col1, col2, col3 = st.columns(3)
-    study = col1.slider("Weekly Study Hours", 0, 16, 10)
+    study = col1.slider("Weekly Study Hours", 0, 40, 10)
     attend = col2.slider("Attendance %", 0, 100, 80)
     part = col3.slider("Participation", 0, 10, 5)
 
