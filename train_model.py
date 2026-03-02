@@ -108,7 +108,7 @@ candidates = {
         }
     },
     "XGBoost": {
-        "model": XGBClassifier(use_label_encoder=False, eval_metric="logloss", random_state=42, n_jobs=-1),
+        "model": XGBClassifier(eval_metric="logloss", random_state=42, n_jobs=-1),
         "params": {
             "n_estimators": [50, 100],
             "max_depth": [3, 6],
