@@ -313,7 +313,7 @@ The project was executed through collaborative teamwork with clearly defined ind
 * Implemented the batch upload workflow with CSV parsing, prediction columns, download functionality, and chart visualizations (grade distribution, pass/fail pie chart, cluster bar chart).
 * Managed the student search feature and deployment configuration.
 
-### [Insert Name 4] – Clustering Architecture & Documentation Lead
+### Ranajeet Roy – Clustering Architecture & Documentation Lead
 
 * Designed and integrated the K-Means clustering pipeline (`n_clusters=3`) to segment students into behavioral cohorts.
 * Managed the LabelEncoder for grade encoding/decoding and its serialized export.
